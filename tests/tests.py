@@ -1,19 +1,24 @@
-from ridemaster.main import *
+from minkyo.main import *
 
 if __name__ == '__main__':
-    drive1 = driver((0, 0), 3)
-    drive2 = driver((10, 10), 2)
-
-    ride1 = rider((0, 1))
-    ride2 = rider((1, 0))
-    ride3 = rider((5, 9))
+    drive1 = driver("1", (0, 0), 2)
+    drive2 = driver("2", (10, 10), 3)
 
     drives = [drive1, drive2]
-    rides = [ride1, ride2, ride3, rider((2, 8)), rider((5, 5)), rider((1, 3)), rider((11,11))]
+    rides = [
+        rider("1", (0, 1)),
+        rider("2", (0, 2)),
+        rider("3", (9, 9)),
+        rider("4", (9, 8)),
+        rider("5", (1, 2)),
+    ]
 
     soln = solve(drives, rides)
     soln.init_dists()
     soln.show_distances()
 
-    soln.find_routes()
+    soln.find_routes_NN()
     soln.show_routes()
+
+    soln.routes_dist()
+    

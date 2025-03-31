@@ -1,14 +1,15 @@
 from setuptools import setup
 
 setup(
-    name='ridemaster',
+    name='minkyo',
     version='0.1',
     description='Tool to assign rides',
     author='dhong',
     author_email='ddanielhongg@gmail.com',
-    packages=['ridemaster'],
+    packages=['minkyo'],
     install_requires=[
         'python-dotenv',
         'googlemaps',
+        'requests',
     ],
 )

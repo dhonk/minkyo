@@ -73,13 +73,19 @@ def get_route(start, end): # start, end both placeId
         "languageCode": "en-US",
         "units": "IMPERIAL"
     }
+    # print(f'Start pId: {start}, End pId: {end}')
     response = requests.post(route_url, data=json.dumps(data), headers=headers)
     return response.json()
 
 def extract_from_route(response):
+    # print(response)
     route = response['routes'][0]
-    dist = float(route['distanceMeters'])
+    try: 
+        dist = float(route['distanceMeters'])
+    except KeyError:
+        dist = 0
     time = float(route['duration'][:-1])
+    # print(f'distance: {dist} time: {time}')
     return dist, time
 
 if __name__ == '__main__':

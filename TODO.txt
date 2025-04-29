@@ -1,11 +1,6 @@
 todo list
-
-- CHANGE TO CLARKE WRIGHT (back burner, will do later with keeping NN for now bcs should be good enough)
-    issue is that nearest neighbor doesn't actually produce optimal routes
-    problem will always be a single depot problem: either everyone will be departing from one point to another singular points, (depot to depot), or will be picked up from home to one location (treat destination as depot), or will be leaving one location to be taken home (single depot)
-- add google maps api calls for distance - COMPLETED 3/31
-
-NEXT STEPS: 
+- fix current implementation of nearest neighbor route alg
+- implement cache of distance between addresses to save me some api calls
 - update all previous methods to now utilize the google maps api calls for distance
 
 - begin discord api integration:
@@ -19,4 +14,9 @@ NEXT STEPS:
   - 6 Also add command in order for people to select whether or not they will be driving
   - 7 Also add command for custom car:
       - eg we're all leaving large group, can pick a car to get into through reactions
+
+NEXT STEPS: 
+- CHANGE TO CLARKE WRIGHT (back burner, will do later with keeping NN for now bcs should be good enough)
+    issue is that nearest neighbor doesn't actually produce optimal routes
+    problem will always be a single depot problem: either everyone will be departing from one point to another singular points, (depot to depot), or will be picked up from home to one location (treat destination as depot), or will be leaving one location to be taken home (single depot)
 

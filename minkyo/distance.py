@@ -1,6 +1,7 @@
 import os
 import math
-import gmaps
+import minkyo.gmaps
+import pickle
 
 """
 Current thought process:
@@ -22,17 +23,16 @@ lets start with a rider object
 
 # human class super
 class human:
-    def __init__ (self, name, address):
+    def __init__ (self, name, address, placeId):
         self.name = name
         self.address = address
+        self.placeId = placeId # google maps place id
 
 # rider (to track pick up status)
-# use color to signify visit status
-# white: not picked up: 0
-# black: picked up: 1
+# color to track visitation bcs stack didn't work
 class rider(human):
-    def __init__ (self, name, address):
-        super().__init__(name, address)
+    def __init__ (self, name, address, placeId):
+        super().__init__(name, address, placeId)
         self.color = 0
     
     def __str__(self):
@@ -40,8 +40,8 @@ class rider(human):
 
 # driver (to track capacity)
 class driver(human):
-    def __init__ (self, name, address, cap):
-        super().__init__(name, address)
+    def __init__ (self, name, address, placeId, cap):
+        super().__init__(name, address, placeId)
         self.cap = cap # driver capacity
     
     def capacity(self):
@@ -62,6 +62,8 @@ class solve:
         self.riders = riders
         # distance matrix
         self.distances = []
+        # eventually add time matrix for time output...?
+
         # routes - stores the rider objects but can extract the addresses
         self.routes = {}
     
@@ -70,7 +72,15 @@ class solve:
     # eventually, want to utilize the google maps to figure out distance
     def dist (self, a, b):
         # TODO: implement guardrails
+        # coordinate / L2 distance
+        '''
         return abs(math.sqrt((a.address[0]-b.address[0]) ** 2 + (a.address[1]-b.address[1]) ** 2))        
+        '''
+
+        # google maps distance
+        route = minkyo.gmaps.get_route(a.placeId, b.placeId)
+        d, _ = minkyo.gmaps.extract_from_route(route)
+        return d
 
     # initialize the distance matrix
     def init_dists (self):
@@ -80,10 +90,7 @@ class solve:
         self.distances = [[math.inf for _ in range(len(comb))] for _ in range(len(comb))]
         for c in range(len(comb)):
             for r in range(len(comb)):
-                # type check : make sure that distances between drivers aren't being registered in the matrix (that would be kinda bad lowk)
-                if type(comb[r]) is driver:
-                    self.distances[c][r] = math.inf
-                else:
+                if c != r and type(comb[r]) is rider:
                     self.distances[c][r] = self.dist(comb[c], comb[r])
     
     # print out the distance matrix
@@ -94,6 +101,37 @@ class solve:
                 o += (f"{c:.2f}, ")
             o += ("\n")
         print(o)
+
+    # show routes
+    def show_routes (self):
+        print('routes:')
+        o = ''
+        for d in self.routes:
+            o += f'{str(d)} : '
+            for r in self.routes[d]:
+                o += f'{str(r)} | '
+            o += '\n'
+        print(o)
+
+    # show the total distance covered by all routes stored in a solution route
+    def routes_dist (self):
+        print('Distances: ')
+        dists = []
+        for i, d in enumerate(self.routes):
+            print(f'{i}: ' + str(d))
+
+            comb = self.drivers + self.riders
+            # the distance 
+            dist = 0
+            # the previous address
+            p_add = self.routes[d][0]
+            for stop in self.routes[d][1:]:
+                dist += self.distances[comb.index(p_add)][comb.index(stop)]
+                p_add = stop
+            print(dist)
+            dists.append(dist)
+        print(f'Average: {sum(dists)/len(dists)}')
+
 
     # nearest neighbor approach
     def find_routes_NN (self):
@@ -106,64 +144,53 @@ class solve:
         Eventually goal is to replace with more optimal algorithms
         """
         
+        # this code is so hideous but idc anymore i just want this to work
+
         # initialize routes
         self.routes = {d : [d] for d in self.drivers}
         # initialize distance matrix
         self.init_dists()
+        # initialize colors to all not put in a car
+        for r in self.riders:
+            r.color = 0
+
+        # num_picked
+        num_picked = 0
 
         # create combined list access distance matrix easier
         # i really dislike this implementation thou let's maybe change it later?
         comb = self.drivers + self.riders
-        # visit stack (technically a queue but whatevs)
-        stack = self.riders
         # flag to check ride fillage
         cond = True
         # while there are people that haven't been visited yet OR while all drivers' capacity is not yet filled
-        while stack and cond:
+        while cond:
             cond = False
             for d in self.drivers:
+                # check if there are riders that need to be picked up
+                if num_picked >= len(self.riders):
+                    break
+
                 # current route
                 croute = self.routes[d]
                 # check if cap met yet
                 if len(croute) > d.cap:
                     continue
 
-                # distances from the last visited node
-                cdists = self.distances[comb.index(croute[-1])]
-                # getting the unvisited indices
-                unvisited = [i for i, x in enumerate(comb) if x in stack and isinstance(x, rider)]
-                # find next closest available node
-                next = comb[cdists.index(min(cdists[i] for i in unvisited))]
+                # iterate over the riders (entire comb list in order to get indexing for the distance matrix):
+                min_dist = math.inf
+                min_r = None
+                for i, r in enumerate(comb):
+                    cdist = self.distances[comb.index(croute[-1])][comb.index(r)]
+                    if type(r) == rider and r.color == 0 and cdist < min_dist:
+                        min_dist = cdist
+                        min_r = r
+
                 # add next closest node to the route
-                croute.append(next)
-                # remove from the stack
-                stack.remove(next)
-                # update cond
+                print(f'adding: {min_r}')
+                croute.append(min_r)
+                min_r.color = 1
+                num_picked += 1
                 cond = True
-                
 
-    # show routes
-    def show_routes (self):
-        o = ""
-        for d in self.routes:
-            o += f"{str(d)} : "
-            for r in self.routes[d]:
-                o += f"{str(r)} | "
-            o += "\n"
-        print(o)
-
-    # show the total distance covered by all routes stored in a solution route
-    def routes_dist (self):
-        for i, d in enumerate(self.routes):
-            print(f"{i}: " + str(d))
-            # the distance 
-            dist = 0
-            # the previous address
-            p_add = self.routes[d][0]
-            for stop in self.routes[d][1:]:
-                dist += self.dist(p_add, stop)
-                p_add = stop
-            print(dist)
-
-        # Currently: this uses a nearest neighbors approach
-        # Maybe implement a different algorithm, like clarke and wright, but let's run w this for now
+    # Currently: this uses a nearest neighbors approach
+    # Maybe implement a different algorithm, like clarke and wright, but let's run w this for now

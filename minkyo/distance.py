@@ -62,6 +62,8 @@ class solve:
         self.riders = riders
         # distance matrix
         self.distances = []
+        # distance storage
+        self.dist_data = {}
         # eventually add time matrix for time output...?
 
         # routes - stores the rider objects but can extract the addresses
@@ -78,12 +80,34 @@ class solve:
         '''
 
         # google maps distance
+
+        # if the pids identical, return 0
+        if a.placeId == b.placeId:
+            return 0
+
+        # check the distance storage if the id exists
+        key = a.placeId + ' ' + b.placeId
+        if key in self.dist_data:
+            return self.dist_data[key]
+
+        # else, call API and add the distance to the storage
         route = minkyo.gmaps.get_route(a.placeId, b.placeId)
         d, _ = minkyo.gmaps.extract_from_route(route)
+        self.dist_data[key] = d
         return d
 
     # initialize the distance matrix
     def init_dists (self):
+        # open the distance storage
+        # TODO: later modify to try {placeId : {placeId : distance}}
+        # TODO: later transition to sqlite?
+        # structure: {placeId placeId : distance}
+        with open('data.pickle', 'ab') as file:
+            pickle.dump({}, file)
+
+        with open('data.pickle', 'rb') as file:
+            self.dist_data = pickle.load(file)
+
         # currently both drivers and riders are included in the distance matrix, this might be good to change in the future
         comb = self.drivers + self.riders
         # use inf because distance matrix may contain adjacent 
@@ -92,6 +116,11 @@ class solve:
             for r in range(len(comb)):
                 if c != r and type(comb[r]) is rider:
                     self.distances[c][r] = self.dist(comb[c], comb[r])
+        
+        # save the distance storage
+        # structure: {placeId placeId : distance}
+        with open('data.pickle', 'wb') as file:
+            pickle.dump(self.dist_data, file)
     
     # print out the distance matrix
     def show_distances (self):
@@ -194,3 +223,4 @@ class solve:
 
     # Currently: this uses a nearest neighbors approach
     # Maybe implement a different algorithm, like clarke and wright, but let's run w this for now
+

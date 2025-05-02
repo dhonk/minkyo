@@ -27,11 +27,18 @@ if __name__ == '__main__':
         rider('bdon', 'rcc', 'ChIJMXtLEZlBjoARkq5QnGwk-C8'),
     ]
 
+    for d in drives:
+        print(d)
+
+    for r in rides:
+        print(r)
+
     soln = solve(drives, rides)
     soln.init_dists()
     soln.show_distances()
 
-    soln.find_routes_NN()
+    # soln.find_routes_NN()
+    soln.find_routes_greedy()
     soln.show_routes()
-    soln.routes_dist()
+    soln.print_dist()
     

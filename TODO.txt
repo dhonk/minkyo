@@ -1,7 +1,17 @@
 todo list
-- fix current implementation of nearest neighbor route alg
-- implement cache of distance between addresses to save me some api calls
-- update all previous methods to now utilize the google maps api calls for distance
+- fix current implementation of nearest neighbor route alg ✅
+- implement cache of distance between addresses to save me some api calls ✅
+- update all previous methods to now utilize the google maps api calls for distance ✅
+- implement optimization in order to make NN effective (basic test - do rides switch to putting noah + jeff in the same car)
+    - basic strategy: keep adding into car if from same address ✅
+    - two opt optimization 
+
+- alternative algorithm:
+    - for every node, branch out, finding nearest neighbors
+    - creating clusters, find biggest cluster, match to biggest car
+    - iterate from largest car to smallest, matching a n sized cluster each time
+    - do some kinda optimization to check if cars are ideally assigned
+        - e.g. take furthest person, try performing individual swaps or smth
 
 - begin discord api integration:
   - 1 Start with just putting rides lists into discord

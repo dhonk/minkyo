@@ -122,8 +122,9 @@ class solve:
             o += ("\n")
         print(o)
 
-    # get string of routes
-    def route_to_str(self):
+    # show routes
+    def show_routes(self):
+        print('routes:')
         o = ''
         for d in self.routes:
             skip = True 
@@ -134,12 +135,7 @@ class solve:
                     continue
                 o += f'{r.name}, '
             o += '\n'
-        return o
-
-    # show routes
-    def show_routes(self):
-        print('routes:')
-        print(self.route_to_str())
+        print(o)
 
     def show_routes_verbose(self):
         print('routes:')
@@ -182,11 +178,6 @@ class solve:
             dists.append(dist)
         print(f'Average: {sum(dists)/len(dists)/1609:0.2f} miles')
 
-    # check if total cap >= # riders
-    def solveable(self):
-        if len(self.riders) > sum(d.cap for d in self.drivers):
-            return False
-        return True
 
     # brute force approach
     # permute through every single rider/driver combination possible

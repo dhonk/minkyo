@@ -1,6 +1,8 @@
 README.md
 setup.py
-minkyo/main.py
+minkyo/discbot.py
+minkyo/distance.py
+minkyo/gmaps.py
 minkyo.egg-info/PKG-INFO
 minkyo.egg-info/SOURCES.txt
 minkyo.egg-info/dependency_links.txt

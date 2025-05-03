@@ -43,8 +43,9 @@ avg dist increased by 0.07 miles
             
 def test():
     drivers = [
-        driver('John', '292 Swanton Blvd', 'ChIJtSSP4HFqjoARKBOB7kCaK7Q', 4),
+        
         driver('Andy', '292 Swanton Blvd', 'ChIJtSSP4HFqjoARKBOB7kCaK7Q', 4),
+        driver('John', '292 Swanton Blvd', 'ChIJtSSP4HFqjoARKBOB7kCaK7Q', 4),
         driver('Jason', '292 Swanton Blvd', 'ChIJtSSP4HFqjoARKBOB7kCaK7Q', 4),
         driver('Annie', 'Pacific Shores', 'ChIJyX2IHeBBjoARcRY-sQBSx68', 4),
         driver('Ashley', '127 Pearl Street', 'ChIJIXO7W59qjoARzhOjjU499cI', 4),

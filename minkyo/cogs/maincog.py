@@ -7,6 +7,8 @@ from minkyo import gmaps
 
 import pickle
 
+# TODO at some point I really need to reformat this, idk why I shoved this into init LMAO but if it works it works ykwim (no)
+
 class maincog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -15,6 +17,21 @@ class maincog(commands.Cog):
         # this currently won't work for applications where makeride is called twice, for instance
         self.recent_msg_id = None
         self.recent_chn = None
+
+        # use this to store who reacted which to check for dual reaction
+        self.drivers = []
+        self.riders = []
+
+        # {user.id : {'name' : user.nick, 'address' : address, 'pId' : pId, 'cap' : capacity}}
+        self.driver_data = {}
+        # use this in order to store the data ykwim
+        with open('./server_data/drivers.pickle', 'rb') as f:
+            self.driver_data = pickle.load(f)
+
+        # {user.id : {'name' : user.nick, 'address' : address, 'pId' : pId}}
+        self.rider_data = {}
+        with open('./server_data/riders.pickle', 'rb') as f:
+            self.rider_data = pickle.load(f)
 
         @bot.tree.command(name='hello', description='say hello', guild=discord.Object(id=1356468638726492231))
         async def hello(interaction: discord.Interaction):
@@ -42,86 +59,131 @@ class maincog(commands.Cog):
             self.recent_msg_id = message.id
             self.recent_chn = channel
         
+        @bot.event
+        async def on_reaction_add(reaction, user):
+            # someone reacted to the ride prompt
+            if reaction.message.id != self.recent_msg_id:
+                return
+            
+            if reaction.emoji == '🧍': # rider instance:
+                # double reaction check
+                if user.id in self.drivers:
+                    await self.recent_chn.send(f'<@{user.id}> please pick either driving or riding!')
+                    await reaction.remove(user)
+                    return
+                self.riders.append(user.id)
+                # run check to see if user's data is stored"
+                if user.id not in self.rider_data: # user info not found in data store
+                    # case: data not found:
+                    await self.recent_chn.send(f"<@{user.id}> looks like we don't have your info yet, use /setup_rider to get started!")
+                    await reaction.remove(user)
+                # else: # user info found, add to the soln
+                #    entry = self.rider_data[user.id]
+                #    new = distance.rider(entry['name'], entry['address'], entry['pId'])
+                #    self.soln.add_rider(new)
+                #    print(f'Added: {new}')                    
+                    
+            if reaction.emoji == '🚗': # driver instance:
+                # double reaction check
+                if user.id in self.riders:
+                    await self.recent_chn.send(f'<@{user.id}> please pick either driving or riding!')
+                    await reaction.remove(user)
+                    return
+                self.drivers.append(user.id)
+                # run check to see if driver's data is stored
+                if user.id not in self.driver_data:
+                    # case: data not found
+                    await self.recent_chn.send(f"<@{user.id}> looks like we don't have your info yet, use /setup_driver to get started!")
+                    await reaction.remove(user)
+                #else:
+                #    entry = self.driver_data[user.id]
+                #    new = distance.driver(entry['name'], entry['address'], entry['pId'], entry['cap'])
+                    
+                #    print(f'Added: {new}')
+        
+        @bot.event
+        async def on_reaction_remove(reaction, user):
+            # someone removed reaction:
+            if reaction.emoji == '🧍': # rider instance:
+                try:
+                    self.riders.remove(user.id)
+                except:
+                    print('on_reaction: rider already removed')
+            if reaction.emoji == '🚗': # driver instance:
+                try:
+                    self.drivers.remove(user.id)
+                except:
+                    print('on_reaction: driver already removed')
+
+        # setup a rider
+        @bot.tree.command(description='Set yourself up as a rider! Enter your address here!', guild=discord.Object(id=1356468638726492231))
+        async def setup_rider(interaction: discord.Interaction, address : str):
+            pIds, adds = gmaps.extract_from_place(gmaps.get_place(address))
+            # TODO add suggestion match functionality
+            # add_menu = '\n'.join([f'{i+1}: {a}' for i, a in enumerate(adds)])
+            await interaction.response.send_message(f"Entering address: {adds[0]}. If this doesn't look right, please run setup again!", ephemeral=True)
+            self.rider_data[interaction.user.id] = {'name' : interaction.user.nick or interaction.user.name, 'address' : adds[0], 'pId' : pIds[0]}
+            print('current rider data: \n', self.rider_data)
+            with open('./server_data/riders.pickle', 'wb') as f:
+                pickle.dump(self.rider_data, f)
+
+        # setup a driver
+        @bot.tree.command(description='Set yourself up as a driver! Enter the your address number of people you can take here!', guild=discord.Object(id=1356468638726492231))
+        async def setup_driver(interaction: discord.Interaction, address : str, capacity : int):
+            pIds, adds = gmaps.extract_from_place(gmaps.get_place(address))
+            # TODO add suggestion match functionality
+            # add_menu = '\n'.join([f'{i+1}: {a}' for i, a in enumerate(adds)])
+            await interaction.response.send_message(f"Entering address: {adds[0]}. If this doesn't look right, please run setup again!", ephemeral=True)
+            self.driver_data[interaction.user.id] = {'name' : interaction.user.nick or interaction.user.name, 'address' : adds[0], 'pId' : pIds[0], 'cap' : capacity}
+            print('current driver data: \n', self.driver_data)
+            with open('./server_data/drivers.pickle', 'wb') as f:
+                pickle.dump(self.driver_data, f)
+
         @bot.tree.command(description='generate a rides list', guild=discord.Object(id=1356468638726492231))
         async def genride(interaction: discord.Interaction):
             if self.recent_msg_id == None or self.recent_chn == None:
-                await interaction.response.send_message('Use /makeride to first create a ride query!')
-            else:
-                await interaction.response.send_message('Processing:')
-                message = await self.recent_chn.fetch_message(self.recent_msg_id)
-                drivers_reacts = message.reactions[0]
-                riders_reacts = message.reactions[1]
-                raw_drivers = [u async for u in drivers_reacts.users()]
-                raw_riders = [u async for u in riders_reacts.users()]
-                driver_objs = list(filter(lambda n: n.bot == False, raw_drivers))
-                rider_objs = list(filter(lambda n: n.bot == False, raw_riders))
+                await interaction.response.send_message('Use /makeride to first create a ride query!', ephemeral=True)
+                return
+        
+            # got the drivers and riders lists
+            print(self.drivers)
+            print(self.riders)
 
-                # got the drivers and riders lists
-                print(driver_objs)
-                print(rider_objs)
-                location_data = {}
+            for u in self.drivers:
+                if u not in self.driver_data:
+                    # TODO: have bot dm, and use reactions + minkyo.gmaps to get the place id
+                    await interaction.response.send_message('Missing info!', ephemeral=True)
+                    return
 
-                # this implementation just has one massive file, probably try to change for per-server in the future
-                with open('./server_data/1356468638726492231.pickle', 'rb') as f:
-                    location_data = pickle.load(f)
+            for u in self.riders:
+                if u not in self.rider_data:
+                    # TODO: have bot dm, and use reactions + minkyo.gmaps to get the place id
+                    await interaction.response.send_message('Missing info!', ephemeral=True)
+                    return
+
+            self.soln = distance.solve()
+            for d in self.drivers:
+                entry = self.driver_data[d]
+                new = distance.driver(entry['name'], entry['address'], entry['pId'], entry['cap'])
+                self.soln.add_driver(new)
+
+            for r in self.riders:
+                entry = self.rider_data[r]
+                new = distance.rider(entry['name'], entry['address'], entry['pId'])
+                self.soln.add_rider(new)
                 
-                def check(m):
-                    return m.author.id == u.id and m.channel == self.recent_chn
-
-                for u in driver_objs:
-                    if u.id not in location_data:
-                        # TODO: have bot dm, and use reactions + minkyo.gmaps to get the place id
-                        await self.recent_chn.send(f'<@{u.id}> Where do you live?')
-                        msg = await bot.wait_for('message', check=check)
-                        response = gmaps.get_place(msg.content)
-                        pIds, addys = gmaps.extract_from_place(response)
-                        await self.recent_chn.send(f'Which address looks the most correct?\n'+'\n'.join([f'{i}: {a}' for i, a in enumerate(addys)]))
-                        selection = await bot.wait_for('message', check=check)
-                        location_data[u.id] = [addys[int(selection.content)], pIds[int(selection.content)], 0]
-                    if location_data[u.id][2] == 0:
-                        await self.recent_chn.send(f'How many people can you drive?')
-                        cap = await bot.wait_for('message', check=check)
-                        location_data[u.id] = [location_data[u.id][0], location_data[u.id][1], int(cap.content)]
-                
-                for u in rider_objs:
-                    if u.id not in location_data:
-                        # TODO: have bot dm, and use reactions + minkyo.gmaps to get the place id
-                        await self.recent_chn.send(f'<@{u.id}> Where do you need to be picked up/dropped off from?')
-                        msg = await bot.wait_for('message', check=check)
-                        response = gmaps.get_place(msg.content)
-                        pIds, addys = gmaps.extract_from_place(response)
-                        await self.recent_chn.send(f'Which address looks the most correct?\n'+'\n'.join([f'{i}: {a}' for i, a in enumerate(addys)]))
-                        selection = await bot.wait_for('message', check=check)
-                        location_data[u.id] = [addys[int(selection.content)], pIds[int(selection.content)], 0]
-                
-                print(location_data)
-
-                with open('./server_data/1356468638726492231.pickle', 'wb') as f:
-                    pickle.dump(location_data, f)
-
-                drivers = [distance.driver(d.nick if d.nick != None else d.user, location_data[d.id][0], location_data[d.id][1], location_data[d.id][2]) for d in driver_objs]
-                riders = [distance.rider(r.nick if r.nick != None else r.user, location_data[r.id][0], location_data[r.id][1]) for r in rider_objs]
-
-                for d in drivers:
-                    print(d)
-                for r in riders:
-                    print(r)
-
-                soln = distance.solve(drivers, riders)
-                soln.show_distances()
-                if soln.solveable():
-                    soln.find_routes_greedy()
-                    routes = soln.route_to_str()
-                    embed=discord.Embed(
-                        title='**Rides: 🌞**',
-                        description=routes,
-                    )
-                    await self.recent_chn.send(embed=embed)
-                else:
-                    await self.recent_chn.send('Number of riders exceeds number of seats.')
-
+            if self.soln.solveable():
+                self.soln.find_routes_greedy()
+                routes = self.soln.route_to_str()
+                embed=discord.Embed(
+                    title='**Rides: 🌞**',
+                    description=routes,
+                )
+                await interaction.response.send_message(embed=embed)
                 self.recent_msg_id = None
                 self.recent_chn = None
+            else:
+                await interaction.response.send_message('Number of riders exceeds number of seats.', ephemeral=True)
 
     @commands.Cog.listener()
     async def on_message(self, message = discord.Message):

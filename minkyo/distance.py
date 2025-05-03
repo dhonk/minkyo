@@ -48,7 +48,7 @@ Yo this joint is a CVRP problem, lit
 """
 
 class solve:
-    def __init__(self, drivers, riders):
+    def __init__(self, drivers=[], riders=[]):
         self.drivers = drivers
         self.riders = riders
         # distance matrix
@@ -59,6 +59,14 @@ class solve:
 
         # routes - stores the rider objects but can extract the addresses
         self.routes = {}
+
+    # add a driver
+    def add_driver(self, driver):
+        self.drivers.append(driver)
+
+    # add a rider
+    def add_rider(self, rider):
+        self.riders.append(rider)
     
     # get distance between two nodes
     # for now, let's just implement distances as coordinates, use euclidean distance for simplicity atm

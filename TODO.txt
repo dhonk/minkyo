@@ -5,6 +5,9 @@ todo list
 - implement optimization in order to make NN effective (basic test - do rides switch to putting noah + jeff in the same car)
     - basic strategy: keep adding into car if from same address ✅
     - two opt optimization 
+- update to ONLY use nicknames from the CORRECT SERVER
+- ensure that new rides setups are clearing + setting up correctly
+- 
 
 - alternative algorithm:
     - for every node, branch out, finding nearest neighbors

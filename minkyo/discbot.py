@@ -17,8 +17,9 @@ async def on_ready():
     print('~~~~~')
     await bot.load_extension('minkyo.cogs.maincog')
     try:
-        guild = discord.Object(id=1356468638726492231)
-        await bot.tree.sync(guild=guild)
+        guilds = [discord.Object(id=1356468638726492231), discord.Object(id=1149416104922452028)]
+        await bot.tree.sync(guild=guilds[0])
+        await bot.tree.sync(guild=guilds[1])
     except Exception as e:
         print(f'Error during sync: {e}')
 
@@ -40,14 +41,16 @@ async def reload(ctx):
     await bot.reload_extension('minkyo.cogs.maincog')
     bot.tree.remove_command('gen_mindy', guild = discord.Object(id=1356468638726492231))
     try:
-        guild = discord.Object(id=1356468638726492231)
-        await bot.tree.sync(guild=guild)
+        guilds = [discord.Object(id=1356468638726492231), discord.Object(1149416104922452028)]
+        await bot.tree.sync(guilds=guilds)
     except Exception as e:
         print(f'Error during sync: {e}')
 
 @bot.command()
 async def clear_data(_):
-    with open('./server_data/1356468638726492231.pickle', 'wb') as file:
+    with open('./server_data/drivers.pickle', 'wb') as file:
+        pickle.dump({}, file)
+    with open('./server_data/riders.pickle', 'wb') as file:
         pickle.dump({}, file)
 
 bot.run(token)

@@ -33,18 +33,18 @@ class maincog(commands.Cog):
         with open('./server_data/riders.pickle', 'rb') as f:
             self.rider_data = pickle.load(f)
 
-        @bot.tree.command(name='hello', description='say hello', guild=discord.Object(id=1356468638726492231))
+        @bot.tree.command(name='hello', description='say hello', guilds=[discord.Object(id=1356468638726492231), discord.Object(id=1149416104922452028)])
         async def hello(interaction: discord.Interaction):
             await interaction.response.send_message('hi wsp!')
 
-        @bot.tree.command(name='makeride', description='make a new ride', guild=discord.Object(id=1356468638726492231))
+        @bot.tree.command(name='makeride', description='make a new ride', guilds=[discord.Object(id=1356468638726492231), discord.Object(id=1149416104922452028)])
         @app_commands.describe(
             dest='The destination'
         )
         async def makeride(interaction: discord.Interaction, ping: discord.Member | discord.Role = None, dest: str = None):
             embed = discord.Embed(
                 title=f'React here for rides to **{dest or "?"}**!!!!!',
-                description=f'Drivers, react with :red_car:\n\nRiders, react with :person_standing:',
+                description=f"Drivers, react with :red_car:\n\nRiders, react with :person_standing:\n\nIf this is your first time using me, please type in  **/setup_driver <your address> <how many people you can drive>**\n\n OR **/setup_rider <your address>** first!!\n\nFor example, if I need to get dropped off at C9, I'll type /setup_rider college 9!\n\nAfter you do this once, you won't have to do this again!!",
             )
             channel = interaction.channel
             msg = '‼️'
@@ -68,7 +68,7 @@ class maincog(commands.Cog):
             if reaction.emoji == '🧍': # rider instance:
                 # double reaction check
                 if user.id in self.drivers:
-                    await self.recent_chn.send(f'<@{user.id}> please pick either driving or riding!')
+                    await self.recent_chn.send(f'<@{user.id}> 야 임마 pick only one')
                     await reaction.remove(user)
                     return
                 self.riders.append(user.id)
@@ -86,7 +86,7 @@ class maincog(commands.Cog):
             if reaction.emoji == '🚗': # driver instance:
                 # double reaction check
                 if user.id in self.riders:
-                    await self.recent_chn.send(f'<@{user.id}> please pick either driving or riding!')
+                    await self.recent_chn.send(f'<@{user.id}> 야 임마 pick only one')
                     await reaction.remove(user)
                     return
                 self.drivers.append(user.id)
@@ -116,30 +116,41 @@ class maincog(commands.Cog):
                     print('on_reaction: driver already removed')
 
         # setup a rider
-        @bot.tree.command(description='Set yourself up as a rider! Enter your address here!', guild=discord.Object(id=1356468638726492231))
+        @bot.tree.command(description='Set yourself up as a rider! Enter your address here!', guilds=[discord.Object(id=1356468638726492231), discord.Object(id=1149416104922452028)])
         async def setup_rider(interaction: discord.Interaction, address : str):
             pIds, adds = gmaps.extract_from_place(gmaps.get_place(address))
             # TODO add suggestion match functionality
             # add_menu = '\n'.join([f'{i+1}: {a}' for i, a in enumerate(adds)])
             await interaction.response.send_message(f"Entering address: {adds[0]}. If this doesn't look right, please run setup again!", ephemeral=True)
-            self.rider_data[interaction.user.id] = {'name' : interaction.user.nick or interaction.user.name, 'address' : adds[0], 'pId' : pIds[0]}
+            try:
+                self.rider_data[interaction.user.id] = {'name' : interaction.user.nick, 'address' : adds[0], 'pId' : pIds[0]}
+                print('sum ting wong')
+            except:
+                
+                self.rider_data[interaction.user.id] = {'name' : interaction.user.name, 'address' : adds[0], 'pId' : pIds[0]}
+
             print('current rider data: \n', self.rider_data)
             with open('./server_data/riders.pickle', 'wb') as f:
                 pickle.dump(self.rider_data, f)
 
         # setup a driver
-        @bot.tree.command(description='Set yourself up as a driver! Enter the your address number of people you can take here!', guild=discord.Object(id=1356468638726492231))
+        @bot.tree.command(description='Set yourself up as a driver! Enter the your address number of people you can take here!', guilds=[discord.Object(id=1356468638726492231), discord.Object(id=1149416104922452028)])
         async def setup_driver(interaction: discord.Interaction, address : str, capacity : int):
             pIds, adds = gmaps.extract_from_place(gmaps.get_place(address))
             # TODO add suggestion match functionality
             # add_menu = '\n'.join([f'{i+1}: {a}' for i, a in enumerate(adds)])
             await interaction.response.send_message(f"Entering address: {adds[0]}. If this doesn't look right, please run setup again!", ephemeral=True)
-            self.driver_data[interaction.user.id] = {'name' : interaction.user.nick or interaction.user.name, 'address' : adds[0], 'pId' : pIds[0], 'cap' : capacity}
+            try:
+                self.driver_data[interaction.user.id] = {'name' : interaction.user.nick, 'address' : adds[0], 'pId' : pIds[0], 'cap' : capacity}
+                print('sum ting wong')
+            except:
+                self.driver_data[interaction.user.id] = {'name' : interaction.user.name, 'address' : adds[0], 'pId' : pIds[0], 'cap' : capacity}
+                
             print('current driver data: \n', self.driver_data)
             with open('./server_data/drivers.pickle', 'wb') as f:
                 pickle.dump(self.driver_data, f)
 
-        @bot.tree.command(description='generate a rides list', guild=discord.Object(id=1356468638726492231))
+        @bot.tree.command(description='generate a rides list', guilds=[discord.Object(id=1356468638726492231), discord.Object(1149416104922452028)])
         async def genride(interaction: discord.Interaction):
             if self.recent_msg_id == None or self.recent_chn == None:
                 await interaction.response.send_message('Use /makeride to first create a ride query!', ephemeral=True)
@@ -184,6 +195,15 @@ class maincog(commands.Cog):
                 self.recent_chn = None
             else:
                 await interaction.response.send_message('Number of riders exceeds number of seats.', ephemeral=True)
+
+            self.drivers = []
+            self.riders = []
+
+        @bot.tree.command(
+            guild=discord.Object(id=1356468638726492231)
+        )
+        async def gen_mindy(interaction: discord.Interaction):
+            interaction.response.send_message('Remember to somehow get rid of this')
 
     @commands.Cog.listener()
     async def on_message(self, message = discord.Message):

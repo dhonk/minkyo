@@ -39,16 +39,19 @@ class maincog(commands.Cog):
         # lookup table for solution objects
         self.solns = {}
 
+        # command to diagnostic, simple hello world type echo
         @bot.tree.command(name='hello', description='say hello', guilds=[discord.Object(id=1356468638726492231), discord.Object(id=1149416104922452028)])
         async def hello(interaction: discord.Interaction):
             await interaction.response.send_message('hi wsp!')
 
+        # command to initialize a rides query
         @bot.tree.command(name='makeride', description='make a new ride', guilds=[discord.Object(id=1356468638726492231), discord.Object(id=1149416104922452028)])
         @app_commands.describe(
             dest='Where everyone is coming from/going to',
             ping='The role/member that you want to ping',
         )
         async def makeride(interaction: discord.Interaction, ping: discord.Member | discord.Role = None, dest: str = None):
+            # embed actually send the message content
             embed = discord.Embed(
                 title=f'React here for rides to **{dest or "?"}**!!!!!',
                 description=f"""
@@ -67,12 +70,13 @@ class maincog(commands.Cog):
 
             )
             channel = interaction.channel
+            # default msg in case of no ping
             msg = '‼️'
             if ping != None:
                 msg = f'{ping.mention}'   
             sent = await interaction.response.send_message(msg, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
             
-            # initial reactions
+            # initial reactions for other users to add onto
             sent_id = sent.message_id
             message = await channel.fetch_message(sent_id)
             await message.add_reaction('🚗')
@@ -128,6 +132,7 @@ class maincog(commands.Cog):
                     
                 #    print(f'Added: {new}')
         
+        # check to see if reaction is removed from ride query
         @bot.event
         async def on_reaction_remove(reaction, user):
             # someone removed reaction:
@@ -167,6 +172,7 @@ class maincog(commands.Cog):
                 print('sum ting wong: ', e)
                 self.rider_data[rider_obj.id] = {'name' : rider_obj.name, 'address' : adds[0], 'pId' : pIds[0]}
 
+            # serialize update, update data files
             print('added: ', rider_obj.id, ': ', self.rider_data[rider_obj.id])
             with open('./server_data/riders.pickle', 'wb') as f:
                 pickle.dump(self.rider_data, f)
@@ -197,10 +203,12 @@ class maincog(commands.Cog):
                 print('sum ting wong: ', e)
                 self.driver_data[rider_obj.id] = {'name' : rider_obj.name, 'address' : adds[0], 'pId' : pIds[0], 'cap' : capacity}
                 
+            # serialize update, update data files
             print('added: ', rider_obj.id, ': ', self.driver_data[rider_obj.id])
             with open('./server_data/drivers.pickle', 'wb') as f:
                 pickle.dump(self.driver_data, f)
 
+        # generate a rides list given the most recent rides query
         @bot.tree.command(description='generate a rides list', guilds=[discord.Object(id=1356468638726492231), discord.Object(1149416104922452028)])
         async def genride(interaction: discord.Interaction):
             if self.recent_msg_id == None or self.recent_chn == None:
@@ -211,20 +219,25 @@ class maincog(commands.Cog):
             print(self.drivers)
             print(self.riders)
 
+            # check for driver initialization fye
             for u in self.drivers:
                 if u not in self.driver_data:
                     # TODO: have bot dm, and use reactions + minkyo.gmaps to get the place id
                     await interaction.response.send_message('Missing info!', ephemeral=True)
                     return
 
+            # check for rider initialization yuh
             for u in self.riders:
                 if u not in self.rider_data:
                     # TODO: have bot dm, and use reactions + minkyo.gmaps to get the place id
                     await interaction.response.send_message('Missing info!', ephemeral=True)
                     return
 
+            # create the distance.driver or distance.rider objects type beat frl frl yuh
             t1 = []
             t2 = []
+
+            # for drivers
             for d in self.drivers:
                 entry = self.driver_data[d]
                 new = distance.driver(entry['name'], entry['address'], entry['pId'], entry['cap'])
@@ -232,6 +245,7 @@ class maincog(commands.Cog):
                 print('added')
                 # solve().add_driver() did not work, for some reason would preserve for every subsequent makeride
 
+            # for riders
             for r in self.riders:
                 entry = self.rider_data[r]
                 new = distance.rider(entry['name'], entry['address'], entry['pId'])
@@ -239,11 +253,13 @@ class maincog(commands.Cog):
                 print('added')
                 # solve().add_rider() did not work, for some reason would preserve for every subsequent makeride
             
+            # update uid #TODO USE THIS TO SUPPORT MULITPLE INSTANCES IN FUTURE
             self.solns[self.uid] = distance.solve(t1, t2)
             solution = self.solns[self.uid]
             self.uid = self.uid + 1
                 
             print(solution)
+            # check to see if enough drivers are present
             if solution.solveable():
                 solution.find_routes_greedy()
                 solution.print_dist()
@@ -257,8 +273,9 @@ class maincog(commands.Cog):
                 # self.recent_msg_id = None
                 # self.recent_chn = None
             else:
+                # case: not enough seats
                 await interaction.response.send_message('Number of riders exceeds number of seats.', ephemeral=True)
 
-
+# setup cog
 async def setup(bot):
     await bot.add_cog(maincog(bot))

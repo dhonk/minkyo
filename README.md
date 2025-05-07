@@ -11,4 +11,11 @@ minkyo is a discord application purpose built to address this issue, and is inte
 The application uses a simple Nearest Neighbor heuristic to allocate the rides, and so doesn't produce a globally optimal solution, but for our purposes, most often does produce a "good enough" approach.
 
 ## Usage
+### If adding to your own guild:
+Unfortunately, minkyo is not available to add across multiple guilds: as I am currently not willing to pay for Google Maps API crecits. However, fork this repository to run the bot locally.
+
+Upon forking, create a .env file in the top level of the repository, where you will need the following:
+GMAP_API <your api key here>
+DISC_API <your discord api key here>
+
 

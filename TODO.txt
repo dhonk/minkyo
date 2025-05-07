@@ -1,35 +1,22 @@
 todo list
+- implement optimization in order to make NN effective (basic test - do rides switch to putting noah + jeff in the same car)
+    - two opt optimization 
+- implement same destination rides
+    - allow users to select which car they are in through reactions while tracking which car they are in
+    - constantly updating a message to reflect current state
+- implement ride updates
+    - allow original generated message to change based on changed reactions
+    - allow manual edits, eg. swapping passengers
+- allow for multiple instances per channel
+    - implement a table lookup
+- allow for multiple servers (global commands)
+- use a locally hosted map in order to remove google API reliance
+
+completed:
 - fix current implementation of nearest neighbor route alg ✅
 - implement cache of distance between addresses to save me some api calls ✅
 - update all previous methods to now utilize the google maps api calls for distance ✅
-- implement optimization in order to make NN effective (basic test - do rides switch to putting noah + jeff in the same car)
+- implement optimization
     - basic strategy: keep adding into car if from same address ✅
-    - two opt optimization 
-- update to ONLY use nicknames from the CORRECT SERVER
-- ensure that new rides setups are clearing + setting up correctly
-- 
-
-- alternative algorithm:
-    - for every node, branch out, finding nearest neighbors
-    - creating clusters, find biggest cluster, match to biggest car
-    - iterate from largest car to smallest, matching a n sized cluster each time
-    - do some kinda optimization to check if cars are ideally assigned
-        - e.g. take furthest person, try performing individual swaps or smth
-
-- begin discord api integration:
-  - 1 Start with just putting rides lists into discord
-  - 2 Server specific user config, so that individual members can set name, address
-  - 3 O shoot I think imma have to add a name field in the human class too
-  - 4 Then set up the reaction feature in order to set up rides based on server profiles
-      - Server profile will need:
-      - Storage of the discord id, the name, driver/rider status, if driver, capacity, address
-  - 5 Then set up the actual command function: in order to set either unified start, unified drop off, or dist pick up, dist drop off
-  - 6 Also add command in order for people to select whether or not they will be driving
-  - 7 Also add command for custom car:
-      - eg we're all leaving large group, can pick a car to get into through reactions
-
-NEXT STEPS: 
-- CHANGE TO CLARKE WRIGHT (back burner, will do later with keeping NN for now bcs should be good enough)
-    issue is that nearest neighbor doesn't actually produce optimal routes
-    problem will always be a single depot problem: either everyone will be departing from one point to another singular points, (depot to depot), or will be picked up from home to one location (treat destination as depot), or will be leaving one location to be taken home (single depot)
-
+- update to ONLY use nicknames from the CORRECT SERVER ✅
+- ensure that new rides setups are clearing + setting up correctly ✅

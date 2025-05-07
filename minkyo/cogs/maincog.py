@@ -228,9 +228,5 @@ class maincog(commands.Cog):
         async def gen_mindy(interaction: discord.Interaction):
             interaction.response.send_message('Remember to somehow get rid of this')
 
-    @commands.Cog.listener()
-    async def on_message(self, message = discord.Message):
-        print(message.content)
-
 async def setup(bot):
     await bot.add_cog(maincog(bot))

@@ -49,9 +49,8 @@ class maincog(commands.Cog):
             channel = interaction.channel
             msg = '‼️'
             if ping != None:
-                msg = f'<@{ping.id}>' if type(ping) == discord.Member else f'<@&{ping.id}>'
+                msg = f'{ping.mention}'
             sent = await interaction.response.send_message(msg, embed=embed)
-            print(type(sent))
             sent_id = sent.message_id
             message = await channel.fetch_message(sent_id)
             await message.add_reaction('🚗')
@@ -123,10 +122,10 @@ class maincog(commands.Cog):
             # add_menu = '\n'.join([f'{i+1}: {a}' for i, a in enumerate(adds)])
             await interaction.response.send_message(f"Entering address: {adds[0]}. If this doesn't look right, please run setup again!", ephemeral=True)
             try:
+                guild = interaction.guild
                 self.rider_data[interaction.user.id] = {'name' : interaction.user.nick, 'address' : adds[0], 'pId' : pIds[0]}
-                print('sum ting wong')
             except:
-                
+                print('sum ting wong')
                 self.rider_data[interaction.user.id] = {'name' : interaction.user.name, 'address' : adds[0], 'pId' : pIds[0]}
 
             print('current rider data: \n', self.rider_data)
@@ -142,8 +141,8 @@ class maincog(commands.Cog):
             await interaction.response.send_message(f"Entering address: {adds[0]}. If this doesn't look right, please run setup again!", ephemeral=True)
             try:
                 self.driver_data[interaction.user.id] = {'name' : interaction.user.nick, 'address' : adds[0], 'pId' : pIds[0], 'cap' : capacity}
-                print('sum ting wong')
             except:
+                print('sum ting wong')
                 self.driver_data[interaction.user.id] = {'name' : interaction.user.name, 'address' : adds[0], 'pId' : pIds[0], 'cap' : capacity}
                 
             print('current driver data: \n', self.driver_data)

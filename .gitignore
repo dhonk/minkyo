@@ -1,4 +1,6 @@
-venv/
+/venv/
 .env
-server_data/
-tests/
+/server_data/
+/tests/
+*.pickle
+

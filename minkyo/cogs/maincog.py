@@ -123,7 +123,7 @@ class maincog(commands.Cog):
             await interaction.response.send_message(f"Entering address: {adds[0]}. If this doesn't look right, please run setup again!", ephemeral=True)
             try:
                 guild = interaction.guild
-                name = await guild.fetch_member(interaction.user.id)
+                name = await guild.fetch_member(interaction.user.id).nick
                 self.rider_data[interaction.user.id] = {'name' : name, 'address' : adds[0], 'pId' : pIds[0]}
             except:
                 print('sum ting wong')
@@ -142,7 +142,7 @@ class maincog(commands.Cog):
             await interaction.response.send_message(f"Entering address: {adds[0]}. If this doesn't look right, please run setup again!", ephemeral=True)
             try:
                 guild = interaction.guild
-                name = await guild.fetch_member(interaction.user.id)
+                name = await guild.fetch_member(interaction.user.id).nick
                 self.driver_data[interaction.user.id] = {'name' : name, 'address' : adds[0], 'pId' : pIds[0], 'cap' : capacity}
             except:
                 print('sum ting wong')

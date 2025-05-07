@@ -50,7 +50,7 @@ class maincog(commands.Cog):
             msg = '‼️'
             if ping != None:
                 msg = f'{ping.mention}'
-            sent = await interaction.response.send_message(msg, embed=embed)
+            sent = await interaction.response.send_message(msg, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
             sent_id = sent.message_id
             message = await channel.fetch_message(sent_id)
             await message.add_reaction('🚗')

@@ -42,7 +42,8 @@ async def reload(ctx):
     bot.tree.remove_command('gen_mindy', guild = discord.Object(id=1356468638726492231))
     try:
         guilds = [discord.Object(id=1356468638726492231), discord.Object(1149416104922452028)]
-        await bot.tree.sync(guilds=guilds)
+        await bot.tree.sync(guild=guilds[0])
+        await bot.tree.sync(guild=guilds[1])
     except Exception as e:
         print(f'Error during sync: {e}')
 

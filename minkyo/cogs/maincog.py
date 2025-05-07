@@ -116,39 +116,60 @@ class maincog(commands.Cog):
 
         # setup a rider
         @bot.tree.command(description='Set yourself up as a rider! Enter your address here!', guilds=[discord.Object(id=1356468638726492231), discord.Object(id=1149416104922452028)])
-        async def setup_rider(interaction: discord.Interaction, address : str):
+        async def setup_rider(interaction : discord.Interaction, address : str, user : discord.User = None):
+            # get the addresses, and the pIds
             pIds, adds = gmaps.extract_from_place(gmaps.get_place(address))
+
             # TODO add suggestion match functionality
             # add_menu = '\n'.join([f'{i+1}: {a}' for i, a in enumerate(adds)])
-            await interaction.response.send_message(f"Entering address: {adds[0]}. If this doesn't look right, please run setup again!", ephemeral=True)
+            opt = f' for {user.name}' if user != None else ''
+            await interaction.response.send_message(f"Entering address: {adds[0]}{opt}. If this doesn't look right, please run setup again!", ephemeral=True)
+
+            # this is the discord.Member object for which to set up the info for
+            rider_obj = interaction.user
+            if user != None:
+                rider_obj = user
+
             try:
                 guild = interaction.guild
-                name = await guild.fetch_member(interaction.user.id).nick
-                self.rider_data[interaction.user.id] = {'name' : name, 'address' : adds[0], 'pId' : pIds[0]}
-            except:
-                print('sum ting wong')
-                self.rider_data[interaction.user.id] = {'name' : interaction.user.name, 'address' : adds[0], 'pId' : pIds[0]}
+                member = await guild.fetch_member(rider_obj.id)
+                name = member.display_name
+                self.rider_data[rider_obj.id] = {'name' : name, 'address' : adds[0], 'pId' : pIds[0]}
+            except Exception as e:
+                print('sum ting wong: ', e)
+                self.rider_data[rider_obj.id] = {'name' : rider_obj.name, 'address' : adds[0], 'pId' : pIds[0]}
 
-            print('current rider data: \n', self.rider_data)
+            print('added: ', rider_obj.id, ': ', self.rider_data[rider_obj.id])
             with open('./server_data/riders.pickle', 'wb') as f:
                 pickle.dump(self.rider_data, f)
 
         # setup a driver
         @bot.tree.command(description='Set yourself up as a driver! Enter the your address number of people you can take here!', guilds=[discord.Object(id=1356468638726492231), discord.Object(id=1149416104922452028)])
-        async def setup_driver(interaction: discord.Interaction, address : str, capacity : int):
+        async def setup_driver(interaction: discord.Interaction, address : str, capacity : int, user : discord.Member = None):
+            # get the addresses, and the pIds
             pIds, adds = gmaps.extract_from_place(gmaps.get_place(address))
+            
             # TODO add suggestion match functionality
             # add_menu = '\n'.join([f'{i+1}: {a}' for i, a in enumerate(adds)])
-            await interaction.response.send_message(f"Entering address: {adds[0]}. If this doesn't look right, please run setup again!", ephemeral=True)
+
+            opt = f' for {user.name}' if user != None else ''
+            await interaction.response.send_message(f"Entering address: {adds[0]}{opt}. If this doesn't look right, please run setup again!", ephemeral=True)
+
+            # this is the discord.Member object for which to set up the info for
+            rider_obj = interaction.user
+            if user != None:
+                rider_obj = user
+
             try:
                 guild = interaction.guild
-                name = await guild.fetch_member(interaction.user.id).nick
-                self.driver_data[interaction.user.id] = {'name' : name, 'address' : adds[0], 'pId' : pIds[0], 'cap' : capacity}
-            except:
-                print('sum ting wong')
-                self.driver_data[interaction.user.id] = {'name' : interaction.user.name, 'address' : adds[0], 'pId' : pIds[0], 'cap' : capacity}
+                member = await guild.fetch_member(rider_obj.id)
+                name = member.display_name
+                self.driver_data[rider_obj.id] = {'name' : name, 'address' : adds[0], 'pId' : pIds[0], 'cap' : capacity}
+            except Exception as e:
+                print('sum ting wong: ', e)
+                self.driver_data[rider_obj.id] = {'name' : rider_obj.name, 'address' : adds[0], 'pId' : pIds[0], 'cap' : capacity}
                 
-            print('current driver data: \n', self.driver_data)
+            print('added: ', rider_obj.id, ': ', self.driver_data[rider_obj.id])
             with open('./server_data/drivers.pickle', 'wb') as f:
                 pickle.dump(self.driver_data, f)
 

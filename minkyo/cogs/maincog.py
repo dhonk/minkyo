@@ -33,30 +33,58 @@ class maincog(commands.Cog):
         with open('./server_data/riders.pickle', 'rb') as f:
             self.rider_data = pickle.load(f)
 
+        # integer UID for each instance
+        self.uid = 0
+        
+        # lookup table for solution objects
+        self.solns = {}
+
         @bot.tree.command(name='hello', description='say hello', guilds=[discord.Object(id=1356468638726492231), discord.Object(id=1149416104922452028)])
         async def hello(interaction: discord.Interaction):
             await interaction.response.send_message('hi wsp!')
 
         @bot.tree.command(name='makeride', description='make a new ride', guilds=[discord.Object(id=1356468638726492231), discord.Object(id=1149416104922452028)])
         @app_commands.describe(
-            dest='The destination'
+            dest='Where everyone is coming from/going to',
+            ping='The role/member that you want to ping',
         )
         async def makeride(interaction: discord.Interaction, ping: discord.Member | discord.Role = None, dest: str = None):
             embed = discord.Embed(
                 title=f'React here for rides to **{dest or "?"}**!!!!!',
-                description=f"Drivers, react with :red_car:\n\nRiders, react with :person_standing:\n\nIf this is your first time using me, please type in  **/setup_driver <your address> <how many people you can drive>**\n\n OR **/setup_rider <your address>** first!!\n\nFor example, if I need to get dropped off at C9, I'll type /setup_rider college 9!\n\nAfter you do this once, you won't have to do this again!!",
+                description=f"""
+                **INSTRUCTIONS**
+                If you will be **driving**, react with :red_car:
+                
+                If you need a **ride**, react with :person_standing:
+                
+                If this is your first time using me, please type in:
+                **/setup_driver <your address> <how many people you can drive>**
+                OR 
+                **/setup_rider <your address>**
+                
+                *For example*, if I need to get dropped off at C9, I'll type /setup_rider college 9!\n\nAfter you do this once, you won't have to do this again!!""",
+                colour=int('0xFFDE00', 16),
+
             )
             channel = interaction.channel
             msg = '‼️'
             if ping != None:
-                msg = f'{ping.mention}'
+                msg = f'{ping.mention}'   
             sent = await interaction.response.send_message(msg, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
+            
+            # initial reactions
             sent_id = sent.message_id
             message = await channel.fetch_message(sent_id)
             await message.add_reaction('🚗')
             await message.add_reaction('🧍')
+            
+            # update the ids of the most recent makeride
             self.recent_msg_id = message.id
             self.recent_chn = channel
+            
+            # clear the lists of the people who reacted for a previous instance of makeride
+            self.riders = []
+            self.drivers = []
         
         @bot.event
         async def on_reaction_add(reaction, user):
@@ -195,38 +223,42 @@ class maincog(commands.Cog):
                     await interaction.response.send_message('Missing info!', ephemeral=True)
                     return
 
-            self.soln = distance.solve()
+            t1 = []
+            t2 = []
             for d in self.drivers:
                 entry = self.driver_data[d]
                 new = distance.driver(entry['name'], entry['address'], entry['pId'], entry['cap'])
-                self.soln.add_driver(new)
+                t1.append(new)
+                print('added')
+                # solve().add_driver() did not work, for some reason would preserve for every subsequent makeride
 
             for r in self.riders:
                 entry = self.rider_data[r]
                 new = distance.rider(entry['name'], entry['address'], entry['pId'])
-                self.soln.add_rider(new)
+                t2.append(new)
+                print('added')
+                # solve().add_rider() did not work, for some reason would preserve for every subsequent makeride
+            
+            self.solns[self.uid] = distance.solve(t1, t2)
+            solution = self.solns[self.uid]
+            self.uid = self.uid + 1
                 
-            if self.soln.solveable():
-                self.soln.find_routes_greedy()
-                routes = self.soln.route_to_str()
+            print(solution)
+            if solution.solveable():
+                solution.find_routes_greedy()
+                solution.print_dist()
+                routes = solution.route_to_str()
                 embed=discord.Embed(
                     title='**Rides: 🌞**',
                     description=routes,
+                    colour=int('0xFFDE00', 16),
                 )
                 await interaction.response.send_message(embed=embed)
-                self.recent_msg_id = None
-                self.recent_chn = None
+                # self.recent_msg_id = None
+                # self.recent_chn = None
             else:
                 await interaction.response.send_message('Number of riders exceeds number of seats.', ephemeral=True)
 
-            self.drivers = []
-            self.riders = []
-
-        @bot.tree.command(
-            guild=discord.Object(id=1356468638726492231)
-        )
-        async def gen_mindy(interaction: discord.Interaction):
-            interaction.response.send_message('Remember to somehow get rid of this')
 
 async def setup(bot):
     await bot.add_cog(maincog(bot))

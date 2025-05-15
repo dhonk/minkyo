@@ -54,20 +54,21 @@ class maincog(commands.Cog):
             # embed actually send the message content
             embed = discord.Embed(
                 title=f'React here for rides to **{dest or "?"}**!!!!!',
-                description=f"""
-                **INSTRUCTIONS**
-                If you will be **driving**, react with :red_car:
+                description=(
+                    "**INSTRUCTIONS**\n"
+                    "If you will be **driving**, react with :red_car:\n\n"
                 
-                If you need a **ride**, react with :person_standing:
+                    "If you need a **ride**, react with :person_standing:\n\n"
                 
-                If this is your first time using me, please type in:
-                **/setup_driver <your address> <how many people you can drive>**
-                OR 
-                **/setup_rider <your address>**
+                    "If this is your first time using me, please **type in**:\n"
+                    "**/setup_driver <your address> <how many people you can drive>**\n"
+                    "OR\n" 
+                    "**/setup_rider <your address>**\n\n"
                 
-                *For example*, if I need to get dropped off at C9, I'll type /setup_rider college 9!\n\nAfter you do this once, you won't have to do this again!!""",
+                    "*For example*, if I need to get dropped off at C9, I'll type **/setup_rider college 9!**\n\n"
+                    "After you do this once, you won't have to do this again!!"
+                ),
                 colour=int('0xFFDE00', 16),
-
             )
             channel = interaction.channel
             # default msg in case of no ping
@@ -85,10 +86,6 @@ class maincog(commands.Cog):
             # update the ids of the most recent makeride
             self.recent_msg_id = message.id
             self.recent_chn = channel
-            
-            # clear the lists of the people who reacted for a previous instance of makeride
-            self.riders = []
-            self.drivers = []
         
         @bot.event
         async def on_reaction_add(reaction, user):
@@ -102,17 +99,11 @@ class maincog(commands.Cog):
                     await self.recent_chn.send(f'<@{user.id}> 야 임마 pick only one')
                     await reaction.remove(user)
                     return
-                self.riders.append(user.id)
                 # run check to see if user's data is stored"
                 if user.id not in self.rider_data: # user info not found in data store
                     # case: data not found:
                     await self.recent_chn.send(f"<@{user.id}> looks like we don't have your info yet, use /setup_rider to get started!")
-                    await reaction.remove(user)
-                # else: # user info found, add to the soln
-                #    entry = self.rider_data[user.id]
-                #    new = distance.rider(entry['name'], entry['address'], entry['pId'])
-                #    self.soln.add_rider(new)
-                #    print(f'Added: {new}')                    
+                    await reaction.remove(user)             
                     
             if reaction.emoji == '🚗': # driver instance:
                 # double reaction check
@@ -120,32 +111,11 @@ class maincog(commands.Cog):
                     await self.recent_chn.send(f'<@{user.id}> 야 임마 pick only one')
                     await reaction.remove(user)
                     return
-                self.drivers.append(user.id)
                 # run check to see if driver's data is stored
                 if user.id not in self.driver_data:
                     # case: data not found
                     await self.recent_chn.send(f"<@{user.id}> looks like we don't have your info yet, use /setup_driver to get started!")
                     await reaction.remove(user)
-                #else:
-                #    entry = self.driver_data[user.id]
-                #    new = distance.driver(entry['name'], entry['address'], entry['pId'], entry['cap'])
-                    
-                #    print(f'Added: {new}')
-        
-        # check to see if reaction is removed from ride query
-        @bot.event
-        async def on_reaction_remove(reaction, user):
-            # someone removed reaction:
-            if reaction.emoji == '🧍': # rider instance:
-                try:
-                    self.riders.remove(user.id)
-                except:
-                    print('on_reaction: rider already removed')
-            if reaction.emoji == '🚗': # driver instance:
-                try:
-                    self.drivers.remove(user.id)
-                except:
-                    print('on_reaction: driver already removed')
 
         # setup a rider
         @bot.tree.command(description='Set yourself up as a rider! Enter your address here!', guilds=[discord.Object(id=1356468638726492231), discord.Object(id=1149416104922452028)])
@@ -215,7 +185,7 @@ class maincog(commands.Cog):
                 await interaction.response.send_message('Use /makeride to first create a ride query!', ephemeral=True)
                 return
         
-            # got the drivers and riders lists
+            # get the drivers and riders lists
             print(self.drivers)
             print(self.riders)
 

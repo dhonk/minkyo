@@ -1,4 +1,6 @@
 todo list
+- change to SQL database
+- fix concurrency issues
 - implement optimization in order to make NN effective (basic test - do rides switch to putting noah + jeff in the same car)
     - two opt optimization 
 - implement same destination rides

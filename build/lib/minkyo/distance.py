@@ -48,7 +48,7 @@ Yo this joint is a CVRP problem, lit
 """
 
 class solve:
-    def __init__(self, drivers, riders):
+    def __init__(self, drivers=[], riders=[]):
         self.drivers = drivers
         self.riders = riders
         # distance matrix
@@ -59,6 +59,14 @@ class solve:
 
         # routes - stores the rider objects but can extract the addresses
         self.routes = {}
+
+    # add a driver
+    def add_driver(self, driver):
+        self.drivers.append(driver)
+
+    # add a rider
+    def add_rider(self, rider):
+        self.riders.append(rider)
     
     # get distance between two nodes
     # for now, let's just implement distances as coordinates, use euclidean distance for simplicity atm
@@ -122,9 +130,8 @@ class solve:
             o += ("\n")
         print(o)
 
-    # show routes
-    def show_routes(self):
-        print('routes:')
+    # get string of routes
+    def route_to_str(self):
         o = ''
         for d in self.routes:
             skip = True 
@@ -135,7 +142,12 @@ class solve:
                     continue
                 o += f'{r.name}, '
             o += '\n'
-        print(o)
+        return o
+
+    # show routes
+    def show_routes(self):
+        print('routes:')
+        print(self.route_to_str())
 
     def show_routes_verbose(self):
         print('routes:')
@@ -176,8 +188,13 @@ class solve:
             dist = self.route_dist(self.routes[d])
             print(f'{i}. {d} : {dist/1609:0.2f} miles')
             dists.append(dist)
-        print(f'Average: {sum(dists)/len(dists)/1609:0.2f} miles')
+        print(f'Average: {0.00 if len(dists) == 0 else sum(dists)/len(dists)/1609:0.2f} miles')
 
+    # check if total cap >= # riders
+    def solveable(self):
+        if len(self.riders) > sum(d.cap for d in self.drivers):
+            return False
+        return True
 
     # brute force approach
     # permute through every single rider/driver combination possible

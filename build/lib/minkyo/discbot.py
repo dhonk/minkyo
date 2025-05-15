@@ -1,78 +1,62 @@
-import discord
 import dotenv
 import os
-import minkyo
-import pickle
-from discord import app_commands
+
+import discord
 from discord.ext import commands
-
-''' 
-top down implementation:
-
-setup processes
-    - when connected to a guild, check the corresponding data file
-    
-    > one function for on_ready logging
-    > one function for joining a new guild
-    > one function for checking available guilds
-
-rides command
-    - 
-    
-address setup command
-    - 
-'''
+import pickle
 
 # discord API connection
 dotenv.load_dotenv()
 token = os.getenv('DISC_API')
 
-# for debug only
-print(f'Discord api key: {token}')
+bot = commands.Bot(command_prefix='!',intents=discord.Intents.all())
 
-# discord bot setup
-desc = '''A helper tool in order to make rides easier. '''
-
-intents = discord.Intents.default()
-intents.members = True
-intents.message_content = True
-
-bot = commands.Bot(command_prefix='!', description=desc, intents=intents)
-
-# ready
+# initial login sync + print
 @bot.event
 async def on_ready():
-    print(f'Logged in as {bot.user} (ID: {bot.user.id})')
-    print('~~~~~~')
-    await bot.load_extension('cogs.maincog')
+    print(f'Logged in as {bot.user} : {bot.user.id}')
+    print('~~~~~')
+    await bot.load_extension('minkyo.cogs.maincog')
+    try:
+        guilds = [discord.Object(id=1356468638726492231), discord.Object(id=1149416104922452028)]
+        await bot.tree.sync(guild=guilds[0])
+        await bot.tree.sync(guild=guilds[1])
+    except Exception as e:
+        print(f'Error during sync: {e}')
 
-# guild joined TODO
-@bot.event
-async def on_guild_join(guild):
-    print(f'Joined a guild')
-
-# guild becomes available
+# on connection to guild:
 @bot.event
 async def on_guild_available(guild):
-    out = ''
-    out += f'{guild} : {guild.id}'
-    # check for the data file
-    path = f'./server_data/{guild.id}.pickle'
+    print('Verifying server data file')
     try:
-        # case: data file for server doesn't exist yet
-        with open(path, 'xb') as f:
-            out += ' - Created file\n'
-        with open(path, 'wb') as f:
-            pickle.dump({}, f) # initialize with empty data
+        # initalize server data files
+        with open(f'./server_data/{guild.id}.pickle', 'xb') as _:
+            print(f'{guild} ({guild.id}) : Created file')
+        with open(f'./server_data/{guild.id}.pickle', 'wb') as f:
+            pickle.dump({}, f)
     except FileExistsError:
-        out += ' - ✅\n'
+        print(f'{guild} ({guild.id}) : ✅')
     except Exception as e:
-        out += f'Error: {e}\n'
-    print(out)
+        print(f'Error while verifying server data: {e}')
 
+# command in order to reload in case of updating cogs
 @bot.command()
-async def reload(ctx: commands.Context, extension: str):
-    await bot.reload_extension(f'cogs.{extension}')
-    await ctx.send(f'reloaded {extension}')
-    
+async def reload(ctx):
+    await bot.reload_extension('minkyo.cogs.maincog')
+    bot.tree.remove_command('gen_mindy', guild = discord.Object(id=1356468638726492231))
+    try:
+        guilds = [discord.Object(id=1356468638726492231), discord.Object(1149416104922452028)] # dev server + soon server
+        await bot.tree.sync(guild=guilds[0])
+        await bot.tree.sync(guild=guilds[1])
+    except Exception as e:
+        print(f'Error during sync: {e}')
+
+# command to clear the stored data
+@bot.command()
+async def clear_data(_):
+    with open('./server_data/drivers.pickle', 'wb') as file:
+        pickle.dump({}, file)
+    with open('./server_data/riders.pickle', 'wb') as file:
+        pickle.dump({}, file)
+
 bot.run(token)

@@ -11,5 +11,7 @@ setup(
         'python-dotenv',
         'googlemaps',
         'requests',
+        'asyncio',
+        'discord.py',
     ],
 )

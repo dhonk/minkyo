@@ -1,3 +1,5 @@
+asyncio
+discord.py
 googlemaps
 python-dotenv
 requests

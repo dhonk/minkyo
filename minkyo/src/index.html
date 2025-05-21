@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+
+<body>
+    <h1>Minkyo Rides!</h1>
+    <form method="POST" action="/">
+        <div>
+            <label for="username">
+                <h2>What is your username on discord?</h2>
+                (not your nickname, but your username eg. @username)<br>
+            </label>
+            <input type="text" name="username">
+        </div>
+            
+        <div>
+            <label for="capacity">
+                <h2>If you are a driver, how many people can you take?</h2>
+            </label>
+            <input type="number" name="capacity">
+        </div>
+
+        <div>
+            <label for="address">
+                <h2>What is your address?</h2>
+            </label>
+            <input type="text" name="address">
+        </div>
+
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>

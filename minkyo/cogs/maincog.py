@@ -13,8 +13,10 @@ import pickle
 # concurrency
 import asyncio
 
-# TODO at some point I really need to reformat this, idk why I shoved this into init LMAO but if it works it works ykwim (no)
+# updated database
+import sqlite3
 
+# the main cog
 class maincog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -52,16 +54,15 @@ class maincog(commands.Cog):
         # lookup table for solution objects
         self.solns = {}
 
+        # initialize database
+        self.conn = sqlite3.connect('minkyo.db')
+        self.cursor = self.conn.cursor()
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS drivers (id INTEGER PRIMARY KEY, name TEXT, address TEXT, pId TEXT, capacity INTEGER)''')
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS riders (id INTEGER PRIMARY KEY, name TEXT, address TEXT, pId TEXT)''')
+        self.conn.commit()
+
     # setup command tree & listeners 
     async def cog_load(self):
-        # Register app commands
-        # self.bot.tree.add_command(self.makeride)
-        # self.bot.tree.add_command(self.setup_rider)
-        # self.bot.tree.add_command(self.setup_driver)
-        # self.bot.tree.add_command(self.genride)
-        # self.bot.tree.add_command(self.hello)
-        self.bot.tree.remove_command('gen_mindy')
-
         # Register event listeners
         self.bot.add_listener(self.on_reaction_add)
         self.bot.add_listener(self.on_reaction_remove)
@@ -72,7 +73,7 @@ class maincog(commands.Cog):
     async def hello(self, interaction: discord.Interaction):
         await interaction.response.send_message('hi wsp!')
 
-        # command to initialize a rides query
+    # command to initialize a rides query
     @app_commands.command(name='makeride', description='make a new ride')
     @app_commands.guilds(discord.Object(id=1356468638726492231), discord.Object(id=1149416104922452028))
     @app_commands.describe(

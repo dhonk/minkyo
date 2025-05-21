@@ -5,6 +5,9 @@ import discord
 from discord.ext import commands
 import pickle
 
+# for corresponding website
+from flask import Flask, render_template
+
 # discord API connection
 dotenv.load_dotenv()
 token = os.getenv('DISC_API')
@@ -59,4 +62,23 @@ async def clear_data(_):
     with open('./server_data/riders.pickle', 'wb') as file:
         pickle.dump({}, file)
 
-bot.run(token)
+# flask app
+app = Flask(__name__)
+@app.route('/src')
+def home():
+    return render_template('index.html')
+
+if __name__ == '__main__':
+    import asyncio
+    from threading import Thread
+    
+    def run_bot():
+        bot.run(token)
+    
+    # Start Discord bot in a separate thread
+    bot_thread = Thread(target=run_bot)
+    bot_thread.daemon = True  # This ensures the thread will be terminated when the main program exits
+    bot_thread.start()
+    
+    # Run Flask on the main thread
+    app.run(debug=False, port=3000)

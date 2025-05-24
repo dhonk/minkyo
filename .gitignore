@@ -4,3 +4,4 @@
 /tests/
 *.pickle
 /build/
+*.json

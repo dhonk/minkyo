@@ -5,3 +5,4 @@
 *.pickle
 /build/
 *.json
+/server_data/

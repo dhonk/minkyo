@@ -1,1 +1,0 @@
-For minkyo api backend

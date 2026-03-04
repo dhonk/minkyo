@@ -1,1 +1,1 @@
-For webapp
+For minkyo api backend

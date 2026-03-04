@@ -1,8 +1,2 @@
 /venv/
 .env
-/server_data/
-/tests/
-*.pickle
-/build/
-*.json
-/server_data/

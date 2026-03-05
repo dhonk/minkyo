@@ -2,3 +2,4 @@ uvicorn[standard]
 fastapi[standard]
 requests
 httpx
+pytest

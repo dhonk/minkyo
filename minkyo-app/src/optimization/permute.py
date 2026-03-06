@@ -1,3 +1,5 @@
+from optimization.schemas import *
+
 '''
 Completely Brute Force Approach.
 d - number of drivers
